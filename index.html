@@ -1,30 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cryptocurrency Price Analyzer</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cryptocurrency Price Analyzer</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Cryptocurrency Price Analyzer</h1>
-        <div class="input-group">
-            <label for="currency">Enter your preferred currency (example, 'usd'):</label>
-            <input type="text" id="currency" placeholder="usd">
-        </div>
-        <div class="input-group">
-            <label for="cryptoId">Enter the cryptocurrency ID (example, 'bitcoin'):</label>
-            <input type="text" id="cryptoId" placeholder="bitcoin">
-        </div>
-        <button id="analyzeBtn">Analyze</button>
-        <div id="results" class="hidden">
-            <p>Current price: <span id="currentPrice"></span></p>
-            <p>Average price for the last 10 days: <span id="averagePrice"></span></p>
-            <p>Signal: <span id="signal"></span></p>
-        </div>
-        <div id="error" class="hidden"></div>
-    </div>
-    <script src="script.js"></script>
+  <div class="container">
+    <h1>Cryptocurrency Price Analyzer</h1>
+    <p>This site may be wrong</p>
+    <label for="currency">Enter your preferred currency:</label>
+    <input type="text" id="currency" placeholder="e.g., 'usd'" />
+    <label for="crypto-id">Enter the cryptocurrency ID:</label>
+    <input type="text" id="crypto-id" placeholder="e.g., 'bitcoin'" />
+    <button onclick="main()">Analyze</button>
+    <div id="output"></div>
+  </div>
+  <script src="script.js"></script>
 </body>
 </html>
