@@ -1,145 +1,152 @@
-// Global variables
-let money = 'usd';
-const days = 10;
+function fetchPrices(cryptoId, days) {
+  const url = `https://api.coingecko.com/api/v3/coins/${cryptoId}/market_chart`;
+  const params = {
+    vs_currency: document.getElementById('currency').value,
+    days: days,
+    interval: 'daily',
+  };
 
-/**
- * Fetches historical prices for a given cryptocurrency
- * @param {string} cryptoId - The ID of the cryptocurrency
- * @param {number} days - Number of days to fetch data for
- * @returns {Promise<number[]|null>} Array of prices or null if there's an error
- */
-async function fetchPrices(cryptoId, days) {
-    const url = `https://api.coingecko.com/api/v3/coins/${cryptoId}/market_chart`;
-    const params = new URLSearchParams({
-        vs_currency: money,
-        days: days
+  return fetch(url, { params })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then((data) => data.prices.map((price) => price[1]))
+    .catch((error) => {
+      console.error('Error:', error);
+      return null;
     });
-
-    try {
-        const response = await fetch(`${url}?${params}`);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        return data.prices.map(price => price[1]);
-    } catch (error) {
-        console.error("Error:", error);
-        return null;
-    }
 }
 
-/**
- * Fetches the current price for a given cryptocurrency
- * @param {string} cryptoId - The ID of the cryptocurrency
- * @returns {Promise<number|null>} Current price or null if there's an error
- */
-async function fetchCurrentPrice(cryptoId) {
-    const url = "https://api.coingecko.com/api/v3/simple/price";
-    const params = new URLSearchParams({
-        ids: cryptoId,
-        vs_currencies: money
-    });
+function fetchCurrentPrice(cryptoId) {
+  const url = 'https://api.coingecko.com/api/v3/simple/price';
+  const params = {
+    ids: cryptoId,
+    vs_currencies: document.getElementById('currency').value,
+  };
 
-    try {
-        const response = await fetch(`${url}?${params}`);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        return data[cryptoId][money];
-    } catch (error) {
-        console.error("Error:", error);
-        return null;
-    }
+  return fetch(url, { params })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then((data) => data[cryptoId][document.getElementById('currency').value])
+    .catch((error) => {
+      console.error('Error:', error);
+      return null;
+    });
 }
 
-/**
- * Calculates the average of an array of numbers
- * @param {number[]} prices - Array of prices
- * @returns {number} Average price
- */
 function calculateAverage(prices) {
-    return prices.reduce((sum, price) => sum + price, 0) / prices.length;
+  return prices.reduce((sum, price) => sum + price, 0) / prices.length;
 }
 
-/**
- * Determines whether to buy, sell, or hold based on current and average prices
- * @param {number} currentPrice - Current price of the cryptocurrency
- * @param {number} averagePrice - Average price of the cryptocurrency
- * @returns {string} "Buy", "Sell", or "Do not buy"
- */
 function signalToBuy(currentPrice, averagePrice) {
-    const currentPriceRounded = Math.round(currentPrice * 100) / 100;
-    const averagePriceRounded = Math.round(averagePrice * 100) / 100;
+  const currentPriceRounded = Math.round(currentPrice * 100) / 100;
+  const averagePriceRounded = Math.round(averagePrice * 100) / 100;
 
-    console.log(`Debugging: Current price (rounded): ${currentPriceRounded}`);
-    console.log(`Debugging: Average price (rounded): ${averagePriceRounded}`);
+  console.log(`Debugging: Current price (rounded): ${currentPriceRounded}`);
+  console.log(`Debugging: Average price (rounded): ${averagePriceRounded}`);
 
-    if (currentPriceRounded < averagePriceRounded) {
-        return "Buy";
-    } else if (currentPriceRounded > averagePriceRounded * 1.05) {
-        return "Sell";
-    } else {
-        return "Do not buy";
-    }
+  if (currentPriceRounded < averagePriceRounded) {
+    return 'Buy';
+  } else if (currentPriceRounded > averagePriceRounded * 1.05) {
+    return 'Sell';
+  } else {
+    return 'Do not buy';
+  }
 }
 
-/**
- * Main function to analyze cryptocurrency prices
- */
-async function main() {
-    const currencyInput = document.getElementById('currency');
-    const cryptoIdInput = document.getElementById('cryptoId');
-    const resultsDiv = document.getElementById('results');
-    const errorDiv = document.getElementById('error');
-
-    money = currencyInput.value.toLowerCase() || 'usd';
-    const cryptoId = cryptoIdInput.value.toLowerCase();
-
-    if (!cryptoId) {
-        showError("Please enter a cryptocurrency ID.");
-        return;
-    }
-
-    // Fetch historical prices
-    const prices = await fetchPrices(cryptoId, days);
-    if (prices === null) {
-        showError("Historical prices could not be obtained. Check the cryptocurrency ID and try again.");
-        return;
-    }
-
-    // Fetch current price
-    const currentPrice = await fetchCurrentPrice(cryptoId);
-    if (currentPrice === null) {
-        showError("The current price could not be obtained. Check the cryptocurrency ID and try again.");
-        return;
-    }
-
-    // Calculate average price for the last 10 days
-    const averagePrice = calculateAverage(prices);
-
-    // Get signal
-    const signal = signalToBuy(currentPrice, averagePrice);
-
-    // Display results
-    document.getElementById('currentPrice').textContent = `${currentPrice} ${money.toUpperCase()}`;
-    document.getElementById('averagePrice').textContent = `${averagePrice.toFixed(2)} ${money.toUpperCase()}`;
-    document.getElementById('signal').textContent = signal;
-
-    resultsDiv.classList.remove('hidden');
-    errorDiv.classList.add('hidden');
+function prepareData(prices) {
+  const data = prices.map((price) => ({ price }));
+  for (let i = 0; i < data.length - 1; i++) {
+    data[i].priceNext = data[i + 1].price;
+  }
+  data.pop(); // Remove the last row with a missing priceNext
+  return data;
 }
 
-/**
- * Displays an error message
- * @param {string} message - Error message to display
- */
-function showError(message) {
-    const errorDiv = document.getElementById('error');
-    errorDiv.textContent = message;
-    errorDiv.classList.remove('hidden');
-    document.getElementById('results').classList.add('hidden');
+function trainModel(data) {
+  const X = data.map((row) => [row.price]);
+  const y = data.map((row) => row.priceNext);
+  const model = new LinearRegression();
+  model.fit(X, y);
+  return model;
 }
 
-// Event listener for the analyze button
-document.getElementById('analyzeBtn').addEventListener('click', main);
+function predict(model, currentPrice) {
+  return model.predict([[currentPrice]])[0];
+}
+
+function main() {
+  const cryptoId = document.getElementById('crypto-id').value;
+  const days = 30;
+
+  // Fetch historical prices
+  fetchPrices(cryptoId, days)
+    .then((prices) => {
+      if (!prices) {
+        showOutput('Historical prices could not be obtained. Check the cryptocurrency ID and try again.');
+        return;
+      }
+
+      // Fetch current price
+      return fetchCurrentPrice(cryptoId)
+        .then((currentPrice) => {
+          if (!currentPrice) {
+            showOutput('The current price could not be obtained. Check the cryptocurrency ID and try again.');
+            return;
+          }
+
+          // Calculate average price for the last 10 days
+          const averagePrice = calculateAverage(prices.slice(-10));
+
+          // Get the signal
+          const signal = signalToBuy(currentPrice, averagePrice);
+
+          showOutput(`Current price: ${currentPrice.toFixed(2)}\nAverage price for the last 10 days: ${averagePrice.toFixed(2)}\nSignal: ${signal}`);
+
+          // Train the model and make a prediction
+          const data = prepareData(prices);
+          const model = trainModel(data);
+          const prediction = predict(model, currentPrice);
+
+          if (prediction > currentPrice) {
+            showOutput('Forecast: the price will rise.');
+          } else {
+            showOutput('Forecast: the price will fall.');
+          }
+          showOutput(`Current price: ${currentPrice.toFixed(2)}, Projected price: ${prediction.toFixed(2)}`);
+        });
+    })
+    .catch((error) => {
+      console.error('Error:', error);
+      showOutput('An error occurred. Please try again.');
+    });
+}
+
+function showOutput(message) {
+  const outputDiv = document.getElementById('output');
+  outputDiv.textContent = message;
+}
+
+class LinearRegression {
+  fit(X, y) {
+    const n = X.length;
+    const sumX = X.reduce((sum, x) => sum + x[0], 0);
+    const sumY = y.reduce((sum, y) => sum + y, 0);
+    const sumXY = X.reduce((sum, x, i) => sum + x[0] * y[i], 0);
+    const sumXX = X.reduce((sum, x) => sum + x[0] * x[0], 0);
+
+    this.slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+    this.intercept = (sumY - this.slope * sumX) / n;
+  }
+
+  predict(X) {
+    return X.map((x) => this.slope * x[0] + this.intercept);
+  }
+}
